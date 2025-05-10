@@ -15,7 +15,7 @@ public class CountriesController(ILogger<CountriesController> logger) : Controll
         new Country("BR", "Brazil", "South America")
     };
 
-    private readonly ILogger<CountriesController> _logger = logger;
+    private readonly ILogger<CountriesController> _logger = logger ?? throw new ArgumentNullException(nameof(logger), "Logger instance cannot be null.");
 
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Country>), StatusCodes.Status200OK)]
@@ -27,26 +27,29 @@ public class CountriesController(ILogger<CountriesController> logger) : Controll
 
     [HttpGet("{code}")]
     [ProducesResponseType(typeof(Country), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<Country> GetCountryByCode(string code)
     {
-        _logger.LogInformation("Looking up country with code: {CountryCode}", code);
+        _logger.LogInformation("Searching for country with code: {Code}", code);
 
-        if (string.IsNullOrWhiteSpace(code) || code.Length != 2)
+        if (string.IsNullOrWhiteSpace(code))
         {
-            _logger.LogWarning("Invalid country code provided: {CountryCode}", code);
-            return BadRequest("Country code must be 2 letters.");
+            throw new ArgumentNullException(nameof(code), "Country code cannot be null or empty.");
+        }
+
+        if (code.Length != 2)
+        {
+            throw new ArgumentException("Country code must be exactly 2 characters long.", nameof(code));
         }
 
         var country = _countries.FirstOrDefault(c => c.Alpha2Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+
         if (country is null)
         {
-            _logger.LogWarning("Country not found for code: {CountryCode}", code);
             return NotFound($"No country found with code '{code}'.");
         }
 
-        _logger.LogInformation("Found country: {@Country}", country);
         return Ok(country);
     }
 
@@ -56,6 +59,9 @@ public class CountriesController(ILogger<CountriesController> logger) : Controll
     public ActionResult<IEnumerable<Country>> GetCountriesByRegion(string region)
     {
         _logger.LogInformation("Filtering countries by region: {Region}", region);
+
+        if (region is null)
+            throw new ArgumentNullException(nameof(region), "Region cannot be null.");
 
         var filtered = _countries
             .Where(c => c.Region.Equals(region, StringComparison.OrdinalIgnoreCase))
@@ -67,7 +73,6 @@ public class CountriesController(ILogger<CountriesController> logger) : Controll
             return NotFound($"No countries found in region '{region}'.");
         }
 
-        _logger.LogInformation("Found {Count} countries in region {Region}", filtered.Count, region);
         return Ok(filtered);
     }
 }
