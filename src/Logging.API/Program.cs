@@ -4,10 +4,13 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
-
 // Add services to the container.
 builder.Services.AddControllers();
+
+builder.Services.AddLogging(loggingBuilder =>
+{
+    loggingBuilder.AddSeq();
+});
 
 builder.Services.AddHttpLogging(logging =>
 {
@@ -15,6 +18,7 @@ builder.Services.AddHttpLogging(logging =>
     logging.CombineLogs = true;
 });
 
+builder.Services.AddHttpLoggingInterceptor<IgnoreLoggingInterceptor>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -27,11 +31,11 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
-app.MapDefaultEndpoints();
 
-// Configure the HTTP request pipeline.
+app.MapHealthChecks("/healthCheck");
 
 app.UseHttpLogging();
 
@@ -45,9 +49,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseStatusCodePages();
+
 app.UseExceptionHandler();
+
 app.UseHttpsRedirection();
+
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();

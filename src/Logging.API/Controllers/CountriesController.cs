@@ -23,8 +23,6 @@ public class CountriesController(ILogger<CountriesController> logger) : Controll
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public ActionResult<Country> CreateCountry([FromBody] Country country)
     {
-        _logger.LogInformation("Attempting to create a new country: {@Country}", country);
-
         if (country is null)
             throw new ArgumentNullException(nameof(country), "Country data is required.");
 
