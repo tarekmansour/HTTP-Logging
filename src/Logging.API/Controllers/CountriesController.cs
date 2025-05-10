@@ -17,6 +17,38 @@ public class CountriesController(ILogger<CountriesController> logger) : Controll
 
     private readonly ILogger<CountriesController> _logger = logger ?? throw new ArgumentNullException(nameof(logger), "Logger instance cannot be null.");
 
+    [HttpPost]
+    [ProducesResponseType(typeof(Country), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public ActionResult<Country> CreateCountry([FromBody] Country country)
+    {
+        _logger.LogInformation("Attempting to create a new country: {@Country}", country);
+
+        if (country is null)
+            throw new ArgumentNullException(nameof(country), "Country data is required.");
+
+        if (string.IsNullOrWhiteSpace(country.Alpha2Code) || country.Alpha2Code.Length != 2)
+            throw new ArgumentException("Alpha2Code must be exactly 2 characters.", nameof(country.Alpha2Code));
+
+        if (string.IsNullOrWhiteSpace(country.Name))
+            throw new ArgumentException("Country name is required.", nameof(country.Name));
+
+        if (string.IsNullOrWhiteSpace(country.Region))
+            throw new ArgumentException("Region is required.", nameof(country.Region));
+
+        if (_countries.Any(c => c.Alpha2Code.Equals(country.Alpha2Code, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException($"A country with code '{country.Alpha2Code}' already exists.");
+        }
+
+        // Simulate adding it to the list (not persisted)
+        _countries.Add(country);
+        _logger.LogInformation("Country created successfully: {@Country}", country);
+
+        return CreatedAtAction(nameof(GetCountryByCode), new { code = country.Alpha2Code }, country);
+    }
+
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Country>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<Country>> GetAllCountries()

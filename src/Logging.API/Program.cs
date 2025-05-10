@@ -1,4 +1,5 @@
 using Logging.API;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,13 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = HttpLoggingFields.All;
+    logging.CombineLogs = true;
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -24,6 +32,9 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 
 // Configure the HTTP request pipeline.
+
+app.UseHttpLogging();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
