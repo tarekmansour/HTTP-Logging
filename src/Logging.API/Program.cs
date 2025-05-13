@@ -4,9 +4,9 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 builder.Services.AddControllers();
-
 builder.Services.AddLogging(loggingBuilder =>
 {
     loggingBuilder.AddSeq();
