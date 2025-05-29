@@ -26,7 +26,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Countries API",
         Version = "v1",
-        Description = "A simple RESTful API to retrieve country data."
+        Description = "A simple RESfull API to retrieve country data."
     });
 });
 builder.Services.AddProblemDetails();
@@ -58,4 +58,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

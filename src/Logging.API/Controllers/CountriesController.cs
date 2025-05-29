@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Logging.API.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 [Produces("application/json")]
 public class CountriesController(ILogger<CountriesController> logger) : ControllerBase
 {
@@ -27,15 +27,15 @@ public class CountriesController(ILogger<CountriesController> logger) : Controll
             throw new ArgumentNullException(nameof(country), "Country data is required.");
 
         if (string.IsNullOrWhiteSpace(country.Alpha2Code) || country.Alpha2Code.Length != 2)
-            throw new ArgumentException("Alpha2Code must be exactly 2 characters.", nameof(country.Alpha2Code));
+            throw new ArgumentException("Alpha2Code must be exactly 2 characters.", nameof(country));
 
         if (string.IsNullOrWhiteSpace(country.Name))
-            throw new ArgumentException("Country name is required.", nameof(country.Name));
+            throw new ArgumentException("Country name is required.", nameof(country));
 
         if (string.IsNullOrWhiteSpace(country.Region))
-            throw new ArgumentException("Region is required.", nameof(country.Region));
+            throw new ArgumentException("Region is required.", nameof(country));
 
-        if (_countries.Any(c => c.Alpha2Code.Equals(country.Alpha2Code, StringComparison.OrdinalIgnoreCase)))
+        if (_countries.Exists(c => c.Alpha2Code.Equals(country.Alpha2Code, StringComparison.OrdinalIgnoreCase)))
         {
             throw new InvalidOperationException($"A country with code '{country.Alpha2Code}' already exists.");
         }
@@ -73,7 +73,7 @@ public class CountriesController(ILogger<CountriesController> logger) : Controll
             throw new ArgumentException("Country code must be exactly 2 characters long.", nameof(code));
         }
 
-        var country = _countries.FirstOrDefault(c => c.Alpha2Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+        var country = _countries.Find(c => c.Alpha2Code.Equals(code, StringComparison.OrdinalIgnoreCase));
 
         if (country is null)
         {
@@ -97,7 +97,7 @@ public class CountriesController(ILogger<CountriesController> logger) : Controll
             .Where(c => c.Region.Equals(region, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
-        if (!filtered.Any())
+        if (filtered.Count == 0)
         {
             _logger.LogWarning("No countries found for region: {Region}", region);
             return NotFound($"No countries found in region '{region}'.");
